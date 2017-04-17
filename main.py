@@ -4,13 +4,29 @@ import io
 import random
 import numpy as np
 from pushbullet import Pushbullet
-import NotificationHandler
+#import NotificationHandler
 
 #========= Global variables ========
 isMotionDetected = False
 
-def write_now():
-	return random.randint(0,10) < 5
+
+def didMotionDetected():
+	print("capture still image")
+	print("Upload image and notify")
+	print("Record video within a few seconds")
+	print("still moving ?")
+	print("upload video and notify")
+
+def didReceiveCommand(command):
+	if command == "check":
+		print("get system info")
+		print("send notification to response")
+	elif command == "last":
+		print("get last motion detection info")
+		print("send notification to response")
+	else: 
+		print("Command not supported: " + command)
+		print("send notification to response")
 
 def write_video(stream):
 	print('Writing video!')
