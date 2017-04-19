@@ -20,7 +20,7 @@ class NotificationHandler:
 		print('Received jsonMessage:\n{}'.format(jsonMessage))
 		print(jsonMessage.values())
 		if jsonMessage["type"] == "tickle" and jsonMessage["subtype"] == "push":
-			allPushes = pb.get_pushes()
+			allPushes = self.pushBulletManager.get_pushes()
 			latest = allPushes[0]
 			body = latest['body']
 			print(body)
@@ -28,11 +28,11 @@ class NotificationHandler:
 
 	def notifyWithImage(self,filePath):
 		with open(filePath, "rb") as pic:
-			file_data = pb.upload_file(pic, "picture.jpg")
+			file_data = self.pushBulletManager.upload_file(pic, "picture.jpg")
 			push = self.pushBulletManager.push_file(**file_data)
 	
 	def notifyWithVideo(self,filePath):
 		with open(filePath, "rb") as pic:
-			file_data = pb.upload_file(pic, "video.h264")
+			file_data = self.pushBulletManager.upload_file(pic, "video.h264")
 			push = self.pushBulletManager.push_file(**file_data)
 	
