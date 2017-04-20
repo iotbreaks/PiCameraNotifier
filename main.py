@@ -7,6 +7,9 @@ import numpy as np
 from pushbullet import Pushbullet
 from time import sleep
 from push import NotificationHandler
+
+
+
 #import NotificationHandler
 PUSHBULLET_KEY = 'o.zfBzBeuIf5A5msLDfUK9mlvtwPK8HG0T'	# YOUR API KEY
 
@@ -51,11 +54,22 @@ class DetectMotion(picamera.array.PiMotionAnalysis):
 		else: 
 			isMotionDetected = False
 
+def cameraInitialize():
+	with picamera.PiCamera() as camera:
+		with DetectMotion(camera) as output:
+			camera.resolution = (640, 480)
+			camera.start_recording('/dev/null', format='h264', motion_output=output)
+			camera.wait_recording(30)
+			camera.stop_recording()
+	
+ 
+
 def main():
 	global isMotionDetected
 	print("### Setup Notification Listener")
 	notificationHandler = NotificationHandler(PUSHBULLET_KEY,didReceiveCommand)
 	print("### Initialize Camera")
+	cameraInitialize()
 	
 	while True: 
 		if isMotionDetected:

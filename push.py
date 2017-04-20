@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 from pushbullet import Listener
 from pushbullet import Pushbullet
+from threading import Thread
 
 HTTP_PROXY_HOST = None
 HTTP_PROXY_PORT = None
@@ -10,6 +11,10 @@ class NotificationHandler:
 		self.pushBulletAPIKey = pushBulletAPIKey
 		self.didReceiveCommand = didReceiveCommand
 		self.pushBulletManager = Pushbullet(self.pushBulletAPIKey)
+		thread = Thread(target = self.createListener)
+		thread.start()
+
+	def createListener(self):
 		self.listener = Listener(account=self.pushBulletManager, on_push=self.on_push, http_proxy_host=HTTP_PROXY_HOST, http_proxy_port=HTTP_PROXY_PORT)
 		self.listener.run_forever()
 
