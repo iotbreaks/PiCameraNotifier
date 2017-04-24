@@ -2,21 +2,46 @@
 from pushbullet import Listener
 from pushbullet import Pushbullet
 from threading import Thread
+from Queue import Queue
+from time import sleep
 
 HTTP_PROXY_HOST = None
 HTTP_PROXY_PORT = None
+QUEUE_MAX_SIZE = 0 # NO LIMIT
+NUM_THREAD = 1 # Limit the concurrent thead to 1
 
 class NotificationHandler:
 	def __init__(self, pushBulletAPIKey,didReceiveCommand):
+		# Setup pushBullet manager	
 		self.pushBulletAPIKey = pushBulletAPIKey
 		self.didReceiveCommand = didReceiveCommand
 		self.pushBulletManager = Pushbullet(self.pushBulletAPIKey)
-		thread = Thread(target = self.createListener)
+		thread = Thread(target = self.__createListener)
 		thread.start()
-
-	def createListener(self):
+		# Setup Notification Queue 
+		self.__setupNotificationQueue()
+	
+	def __createListener(self):
 		self.listener = Listener(account=self.pushBulletManager, on_push=self.on_push, http_proxy_host=HTTP_PROXY_HOST, http_proxy_port=HTTP_PROXY_PORT)
 		self.listener.run_forever()
+
+	def __setupNotificationQueue(self):
+		print("setupNotificationQueue")
+		self.notificationQueue = Queue(maxsize=QUEUE_MAX_SIZE)
+		for i in range(NUM_THREAD):
+			worker = Thread(target=self.__motionNotify, args=())
+			worker.setDaemon(True)
+			worker.start()
+
+	def __motionNotify(self):
+		print("__motionNotify called")
+		while True:
+			filePath=self.notificationQueue.get()
+			print("upload and notify: " + filePath)
+			self.notificationQueue.task_done()
+
+	def pushNotificationToMobile(self, filePath):
+		self.notificationQueue.put(filePath)
 
 	def __delete(self):
 		self.listener.close() # to stop the run_forever()
