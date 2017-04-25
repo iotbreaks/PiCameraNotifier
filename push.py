@@ -38,6 +38,10 @@ class NotificationHandler:
 		while True:
 			filePath=self.notificationQueue.get()
 			print("upload and notify: " + filePath)
+			with open(filePath, "rb") as pic:
+				fileData = self.pushBulletManager.upload_file(pic, "picture.jpg")
+				push = self.pushBulletManager.push_file(**fileData)
+				print("push result: ", push)
 			self.notificationQueue.task_done()
 
 	def pushNotificationToMobile(self, filePath):

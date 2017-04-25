@@ -17,15 +17,11 @@ PUSHBULLET_KEY = 'o.zfBzBeuIf5A5msLDfUK9mlvtwPK8HG0T'	# YOUR API KEY
 isMotionDetected = False
 isMotionDetected = False
 camera = picamera.PiCamera()
+camera.annotate_background = True
 stream = picamera.PiCameraCircularIO(camera, seconds=20)
 scheduler = sched.scheduler(time.time, time.sleep)
+capturedPath = '/home/pi/Desktop/Kenny/PiCameraNotifier/capturedPhotos/'
 
-def didMotionDetected():
-	print("capture still image")
-	print("Upload image and notify")
-	print("Record video within a few seconds")
-	print("still moving ?")
-	print("upload video and notify")
 
 def didReceiveCommand(command):
 	print("didReceiveCommand")
@@ -41,6 +37,8 @@ def didReceiveCommand(command):
 		print("Command not supported: " + command)
 		print("send notification to response")
 
+print("### Setup Notification Listener")
+notificationHandler = NotificationHandler(PUSHBULLET_KEY,didReceiveCommand)
 
 class DetectMotion(picamera.array.PiMotionAnalysis):
 	def analyse(self,a):
@@ -62,20 +60,28 @@ def motionDetected():
 
 def capture_image(fileName):
 	global camera
+	global notificationHandler
+	camera.annotate_text = fileName
+	filePath=capturedPath+fileName+'.jpg'
 	print("capture still image")
-	camera.capture('/home/pi/Desktop/'+fileName+'.jpg')
-	
+	camera.capture(filePath)
+	notificationHandler.pushNotificationToMobile(filePath)
 
 def write_video(fileName):
 	global stream
+	global notificationHandler
 	print('Writing video!')
 	with stream.lock:
 		for frame in stream.frames:
 			if frame.frame_type == picamera.PiVideoFrameType.sps_header:
 				stream.seek(frame.position)
 				break
-		with io.open(fileName+'.h264', 'wb') as output:
+		filePath=capturedPath+fileName+'.h264'
+		with io.open(filePath, 'wb') as output:
 			output.write(stream.read())
+		notificationHandler.pushNotificationToMobile(filePath)
+		
+			
 
 def cameraInitialize():
 	print("cameraInitialize: for (1) motion detection, and (2) circularIO recording")
@@ -100,9 +106,7 @@ def cameraInitialize():
 def main():
 	global isMotionDetected
 	global isReceivedCommand
-	print("### Setup Notification Listener")
-	notificationHandler = NotificationHandler(PUSHBULLET_KEY,didReceiveCommand)
-	notificationHandler.pushNotificationToMobile("/home/pi/Desktop/image1.jpg")
+	global notificationHandler
 	print("### Initialize Camera")
 	cameraInitialize()
 
