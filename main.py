@@ -80,8 +80,6 @@ def write_video(fileName):
 		with io.open(filePath, 'wb') as output:
 			output.write(stream.read())
 		notificationHandler.pushNotificationToMobile(filePath)
-		
-			
 
 def cameraInitialize():
 	print("cameraInitialize: for (1) motion detection, and (2) circularIO recording")

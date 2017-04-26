@@ -1,5 +1,10 @@
 #!/usr/bin/python
 import subprocess
-process = subprocess.Popen(['./systemInfo.sh'], stdout=subprocess.PIPE)
+import io
+
+WORKING_DIR="/home/pi/Desktop/Kenny/PiCameraNotifier/"
+process = subprocess.Popen([ WORKING_DIR + '/systemInfo.sh'], stdout=subprocess.PIPE)
 out, err = process.communicate()
 print(out)
+with io.open(WORKING_DIR+'test.log', 'wb') as output:
+	output.write(out)
