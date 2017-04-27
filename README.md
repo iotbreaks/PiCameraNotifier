@@ -1,6 +1,8 @@
 ## PiCameraNotifier
 This is a camera application which detects motion and notifies to mobiles and desktops with captured images and videos when motion detected. It's mostly written in Python.
 
+## Detail Explanation and Demo Video 
+Please goto this [tutorial](http://iotbreaks.com) :+1:
 
 ## Hardware
 * Raspberry Pi 3
@@ -18,5 +20,3 @@ $> cd /home/pi/Desktop/PiCameraNotifer
 $> ./main.py
 ```
 
-## Detail Explanation and Demo Video 
-Please goto this [tutorial](http://iotbreaks.com) :+1:
