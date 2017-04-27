@@ -33,32 +33,54 @@ class NotificationHandler:
 			worker.setDaemon(True)
 			worker.start()
 
-	def __motionNotify(self):
-		print("__motionNotify called")
-		while True:
-			filePath=self.notificationQueue.get()
-			print("upload and notify: " + filePath)
-			with open(filePath, "rb") as pic:
-				fileData = self.pushBulletManager.upload_file(pic, "picture.jpg")
-				push = self.pushBulletManager.push_file(**fileData)
-				print("push result: ", push)
-			self.notificationQueue.task_done()
+	#def __motionNotify(self):
+	#	print("__motionNotify called")
+	#	while True:
+	#		filePath=self.notificationQueue.get()
+	#		print("upload and notify: " + filePath)
+	#		with open(filePath, "rb") as pic:
+	#			fileData = self.pushBulletManager.upload_file(pic, "picture.jpg")
+	#			push = self.pushBulletManager.push_file(**fileData)
+	#			print("push result: ", push)
+	#		self.notificationQueue.task_done()
 
 	def pushNotificationToMobile(self, filePath):
 		self.notificationQueue.put(filePath)
+	
+	def pushToMobile(self, dataDictionary):
+		print("pushToMobile: ", dataDictionary)
+		self.notificationQueue.put(dataDictionary)
+	
+	def __motionNotify(self):
+		print("__motionNotify called")
+		while True:
+			dataDictionary=self.notificationQueue.get()
+			print("upload and notify: ", dataDictionary)
+			if dataDictionary['type'] == "TEXT_MESSAGE":
+				push = self.pushBulletManager.push_note("Push from Picam",dataDictionary['text'] )
+				print("push result: ", push)
+			elif dataDictionary['type'] == "FILE_MESSAGE":
+				with open(dataDictionary['filePath'], "rb") as pic:
+					fileData = self.pushBulletManager.upload_file(pic, "picture.jpg")
+					push = self.pushBulletManager.push_file(**fileData)
+					print("push result: ", push)
+			else:
+				print("Not support type: ", dataDictionary['Type'])		
+			self.notificationQueue.task_done()
 
 	def __delete(self):
 		self.listener.close() # to stop the run_forever()
 
 	def on_push(self, jsonMessage):
-		print('Received jsonMessage:\n{}'.format(jsonMessage))
-		print(jsonMessage.values())
 		if jsonMessage["type"] == "tickle" and jsonMessage["subtype"] == "push":
 			allPushes = self.pushBulletManager.get_pushes()
 			latest = allPushes[0]
-			body = latest['body']
-			print(body)
-			self.didReceiveCommand(body)
+			if 'body' in latest:
+				body = latest['body']
+				print(body)
+				self.didReceiveCommand(body)
+			else:
+				print("latest pushes: ", latest)	
 
 	def notifyWithImage(self,filePath):
 		with open(filePath, "rb") as pic:

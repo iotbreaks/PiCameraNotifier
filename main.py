@@ -1,6 +1,7 @@
 #!/usr/bin/python
 import picamera
 import picamera.array
+import subprocess
 import io
 import numpy as np
 from pushbullet import Pushbullet
@@ -15,24 +16,21 @@ PUSHBULLET_KEY = 'o.zfBzBeuIf5A5msLDfUK9mlvtwPK8HG0T'	# YOUR API KEY
 
 #========= Global variables ========
 isMotionDetected = False
-isMotionDetected = False
 camera = picamera.PiCamera()
 camera.annotate_background = True
 stream = picamera.PiCameraCircularIO(camera, seconds=20)
 scheduler = sched.scheduler(time.time, time.sleep)
-capturedPath = '/home/pi/Desktop/Kenny/PiCameraNotifier/capturedPhotos/'
-
+capturedPath = '/home/pi/Desktop/Kenny/PiCameraNotifier/'
+WORKING_DIR="/home/pi/Desktop/Kenny/PiCameraNotifier/"
 
 def didReceiveCommand(command):
-	print("didReceiveCommand")
+	global notificationHandler
 	if command == "check":
 		print("get system info")
-		print("send notification to response")
-		isReceivedCommand = True
-	elif command == "last":
-		print("get last motion detection info")
-		print("send notification to response")
-		isReceivedCommand = True
+		process = subprocess.Popen([ WORKING_DIR + 'systemInfo.sh'], stdout=subprocess.PIPE)
+		out, err = process.communicate()
+		pushData = {'type': 'TEXT_MESSAGE', 'text': out}
+		notificationHandler.pushToMobile(pushData)
 	else: 
 		print("Command not supported: " + command)
 		print("send notification to response")
@@ -47,11 +45,11 @@ class DetectMotion(picamera.array.PiMotionAnalysis):
 		if(a > 60).sum() > 10:
 			print("motion just detected")
 			isMotionDetected = True
-			motionDetected() 
+			didDetectMotion() 
 		else: 
 			isMotionDetected = False
 
-def motionDetected():
+def didDetectMotion():
 	print("called When Motion Detected")
 	fileName=time.strftime("%Y%m%d_%I:%M:%S%p")  # '20170424_12:53:15AM'
 	capture_image(fileName)
@@ -63,9 +61,10 @@ def capture_image(fileName):
 	global notificationHandler
 	camera.annotate_text = fileName
 	filePath=capturedPath+fileName+'.jpg'
-	print("capture still image")
+	print("capture still image to file: ", filePath)
 	camera.capture(filePath)
-	notificationHandler.pushNotificationToMobile(filePath)
+	pushData = {'type': 'FILE_MESSAGE', 'filePath': filePath}
+	notificationHandler.pushToMobile(pushData)
 
 def write_video(fileName):
 	global stream
@@ -79,7 +78,8 @@ def write_video(fileName):
 		filePath=capturedPath+fileName+'.h264'
 		with io.open(filePath, 'wb') as output:
 			output.write(stream.read())
-		notificationHandler.pushNotificationToMobile(filePath)
+		pushData = {'type': 'FILE_MESSAGE', 'filePath': filePath}
+		notificationHandler.pushToMobile(pushData)
 
 def cameraInitialize():
 	print("cameraInitialize: for (1) motion detection, and (2) circularIO recording")
@@ -103,7 +103,6 @@ def cameraInitialize():
 	
 def main():
 	global isMotionDetected
-	global isReceivedCommand
 	global notificationHandler
 	print("### Initialize Camera")
 	cameraInitialize()
