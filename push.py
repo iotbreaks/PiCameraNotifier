@@ -78,7 +78,10 @@ class NotificationHandler:
 			if 'body' in latest:
 				body = latest['body']
 				print(body)
-				self.didReceiveCommand(body)
+				if body.startswith("@"):
+					self.didReceiveCommand(body)
+				else:
+					print("latest pushes: ", latest)	
 			else:
 				print("latest pushes: ", latest)	
 

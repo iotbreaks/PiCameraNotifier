@@ -16,21 +16,26 @@ PUSHBULLET_KEY = 'o.zfBzBeuIf5A5msLDfUK9mlvtwPK8HG0T'	# YOUR API KEY
 
 #========= Global variables ========
 isMotionDetected = False
-camera = picamera.PiCamera()
-camera.annotate_background = True
-stream = picamera.PiCameraCircularIO(camera, seconds=20)
+#camera = picamera.PiCamera()
+#camera.annotate_background = True
+#stream = picamera.PiCameraCircularIO(camera, seconds=20)
+camera=""
+stream=""
 scheduler = sched.scheduler(time.time, time.sleep)
 capturedPath = '/home/pi/Desktop/Kenny/PiCameraNotifier/'
 WORKING_DIR="/home/pi/Desktop/Kenny/PiCameraNotifier/"
 
 def didReceiveCommand(command):
 	global notificationHandler
-	if command == "check":
+	if command == "@check":
 		print("get system info")
 		process = subprocess.Popen([ WORKING_DIR + 'systemInfo.sh'], stdout=subprocess.PIPE)
 		out, err = process.communicate()
 		pushData = {'type': 'TEXT_MESSAGE', 'text': out}
 		notificationHandler.pushToMobile(pushData)
+	if command == "@snap"	:
+		fileName=time.strftime("%Y%m%d_%I:%M:%S%p")  # '20170424_12:53:15AM'
+		capture_image(fileName)
 	else: 
 		print("Command not supported: " + command)
 		print("send notification to response")
@@ -104,8 +109,8 @@ def cameraInitialize():
 def main():
 	global isMotionDetected
 	global notificationHandler
-	print("### Initialize Camera")
-	cameraInitialize()
+	#print("### Initialize Camera")
+	#cameraInitialize()
 
 if __name__ == "__main__":
     main()
