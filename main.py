@@ -16,11 +16,9 @@ PUSHBULLET_KEY = 'o.zfBzBeuIf5A5msLDfUK9mlvtwPK8HG0T'	# YOUR API KEY
 
 #========= Global variables ========
 isMotionDetected = False
-#camera = picamera.PiCamera()
-#camera.annotate_background = True
-#stream = picamera.PiCameraCircularIO(camera, seconds=20)
-camera=""
-stream=""
+camera = picamera.PiCamera()
+camera.annotate_background = True
+stream = picamera.PiCameraCircularIO(camera, seconds=20)
 scheduler = sched.scheduler(time.time, time.sleep)
 capturedPath = '/home/pi/Desktop/Kenny/PiCameraNotifier/'
 WORKING_DIR="/home/pi/Desktop/Kenny/PiCameraNotifier/"
@@ -83,7 +81,10 @@ def write_video(fileName):
 		filePath=capturedPath+fileName+'.h264'
 		with io.open(filePath, 'wb') as output:
 			output.write(stream.read())
-		pushData = {'type': 'FILE_MESSAGE', 'filePath': filePath}
+		# convert from h264 to mp4
+		outputFilePath=capturedPath+fileName+'.mp4'
+		process = subprocess.Popen(["ffmpeg", '-framerate', '24', '-i', filePath, '-c', 'copy', outputFilePath], stdout=subprocess.PIPE)
+		pushData = {'type': 'FILE_MESSAGE', 'filePath': outputFilePath}
 		notificationHandler.pushToMobile(pushData)
 
 def cameraInitialize():

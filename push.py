@@ -60,10 +60,13 @@ class NotificationHandler:
 				push = self.pushBulletManager.push_note("Push from Picam",dataDictionary['text'] )
 				print("push result: ", push)
 			elif dataDictionary['type'] == "FILE_MESSAGE":
-				with open(dataDictionary['filePath'], "rb") as pic:
+				filePath = dataDictionary['filePath']
+				with open(filePath, "rb") as pic:
 					fileData = self.pushBulletManager.upload_file(pic, "picture.jpg")
 					push = self.pushBulletManager.push_file(**fileData)
 					print("push result: ", push)
+					if "iden" in push:
+						os.remove(filePath)
 			else:
 				print("Not support type: ", dataDictionary['Type'])		
 			self.notificationQueue.task_done()
