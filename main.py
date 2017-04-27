@@ -16,7 +16,6 @@ import sched, time
 #PUSHBULLET_KEY='enter_your_pushbullet_key_here'
 PUSHBULLET_KEY = 'o.zfBzBeuIf5A5msLDfUK9mlvtwPK8HG0T'
 
-
 #========= Global variables ========
 isMotionDetected = False
 camera = picamera.PiCamera()
@@ -113,8 +112,8 @@ def cameraInitialize():
 def main():
 	global isMotionDetected
 	global notificationHandler
-	#print("### Initialize Camera")
-	#cameraInitialize()
+	print("### Initialize Camera")
+	cameraInitialize()
 
 if __name__ == "__main__":
     main()

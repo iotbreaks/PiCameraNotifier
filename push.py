@@ -4,6 +4,8 @@ from pushbullet import Pushbullet
 from threading import Thread
 from Queue import Queue
 from time import sleep
+import os
+
 
 HTTP_PROXY_HOST = None
 HTTP_PROXY_PORT = None
@@ -32,17 +34,6 @@ class NotificationHandler:
 			worker = Thread(target=self.__motionNotify, args=())
 			worker.setDaemon(True)
 			worker.start()
-
-	#def __motionNotify(self):
-	#	print("__motionNotify called")
-	#	while True:
-	#		filePath=self.notificationQueue.get()
-	#		print("upload and notify: " + filePath)
-	#		with open(filePath, "rb") as pic:
-	#			fileData = self.pushBulletManager.upload_file(pic, "picture.jpg")
-	#			push = self.pushBulletManager.push_file(**fileData)
-	#			print("push result: ", push)
-	#		self.notificationQueue.task_done()
 
 	def pushNotificationToMobile(self, filePath):
 		self.notificationQueue.put(filePath)
