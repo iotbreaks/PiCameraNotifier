@@ -11,8 +11,11 @@ from threading import Thread
 from Queue import Queue
 import sched, time
 
-#import NotificationHandler
-PUSHBULLET_KEY = 'o.zfBzBeuIf5A5msLDfUK9mlvtwPK8HG0T'	# YOUR API KEY
+
+#========= Customisable Parameters ======
+#PUSHBULLET_KEY='enter_your_pushbullet_key_here'
+PUSHBULLET_KEY = 'o.zfBzBeuIf5A5msLDfUK9mlvtwPK8HG0T'
+
 
 #========= Global variables ========
 isMotionDetected = False
