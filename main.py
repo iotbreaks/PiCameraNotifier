@@ -25,10 +25,6 @@ LOG_FILE_PATH=WORKING_DIR+'run.log'
 logging.basicConfig(format='%(asctime)s %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p',filename=LOG_FILE_PATH,level=logging.INFO)
 logging.info("=========== app launched ========")
 
-with io.open(WORKING_DIR+'test_main.log', 'wb') as output:
-	output.write("This is something fucking cool")
-
-
 isMotionDetected = False
 camera = picamera.PiCamera()
 camera.resolution=(1024,768)
@@ -46,7 +42,7 @@ def didReceiveCommand(command):
 		notificationHandler.pushToMobile(pushData)
 	if command == "@snap"	:
 		fileName=time.strftime("%Y%m%d_%I:%M:%S%p")  # '20170424_12:53:15AM'
-		capture_image(fileName)
+		captureImage(fileName)
 	else: 
 		logging.info("Command not supported: " + command)
 		logging.info("send notification to response")
@@ -68,11 +64,11 @@ class DetectMotion(picamera.array.PiMotionAnalysis):
 def didDetectMotion():
 	logging.info("called When Motion Detected")
 	fileName=time.strftime("%Y%m%d_%I:%M:%S%p")  # '20170424_12:53:15AM'
-	capture_image(fileName)
-	scheduler.enter(1,1, write_video, (fileName,))
+	captureImage(fileName)
+	scheduler.enter(1,1, writeVideo, (fileName,))
 	scheduler.run()
 
-def capture_image(fileName):
+def captureImage(fileName):
 	global camera
 	global notificationHandler
 	camera.annotate_text = fileName
@@ -82,7 +78,7 @@ def capture_image(fileName):
 	pushData = {'type': 'FILE_MESSAGE', 'filePath': filePath}
 	notificationHandler.pushToMobile(pushData)
 
-def write_video(fileName):
+def writeVideo(fileName):
 	global stream
 	global notificationHandler
 	logging.info('Writing video!')
