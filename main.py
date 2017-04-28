@@ -21,9 +21,13 @@ PUSHBULLET_KEY = 'o.zfBzBeuIf5A5msLDfUK9mlvtwPK8HG0T'
 CAMERA_OUT_PATH = '/home/pi/Desktop/'
 WORKING_DIR="/home/pi/Desktop/PiCameraNotifier/"
 LOG_FILE_PATH=WORKING_DIR+'run.log'
-os.remove(LOG_FILE_PATH)
+#os.remove(LOG_FILE_PATH)
 logging.basicConfig(format='%(asctime)s %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p',filename=LOG_FILE_PATH,level=logging.INFO)
 logging.info("=========== app launched ========")
+
+with io.open(WORKING_DIR+'test_main.log', 'wb') as output:
+	output.write("This is something fucking cool")
+
 
 isMotionDetected = False
 camera = picamera.PiCamera()
