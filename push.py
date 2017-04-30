@@ -28,7 +28,7 @@ class NotificationHandler:
 		self.listener.run_forever()
 
 	def __setupNotificationQueue(self):
-		logging.info("setupNotificationQueue")
+		print("setupNotificationQueue")
 		self.notificationQueue = Queue(maxsize=QUEUE_MAX_SIZE)
 		for i in range(NUM_THREAD):
 			worker = Thread(target=self.__motionNotify, args=())
@@ -39,27 +39,28 @@ class NotificationHandler:
 		self.notificationQueue.put(filePath)
 	
 	def pushToMobile(self, dataDictionary):
-		logging.info("pushToMobile: ", dataDictionary)
+		print("pushToMobile: ", dataDictionary)
 		self.notificationQueue.put(dataDictionary)
 	
 	def __motionNotify(self):
-		logging.info("__motionNotify called")
+		print("__motionNotify called")
 		while True:
 			dataDictionary=self.notificationQueue.get()
-			logging.info("upload and notify: ", dataDictionary)
+			print("upload and notify: ", dataDictionary)
 			if dataDictionary['type'] == "TEXT_MESSAGE":
 				push = self.pushBulletManager.push_note("Push from Picam",dataDictionary['text'] )
-				logging.info("push result: ", push)
+				print("push result: ", push)
 			elif dataDictionary['type'] == "FILE_MESSAGE":
 				filePath = dataDictionary['filePath']
+				print("upload and push file: ", filePath)
 				with open(filePath, "rb") as pic:
-					fileData = self.pushBulletManager.upload_file(pic, "picture.jpg")
+					fileData = self.pushBulletManager.upload_file(pic, dataDictionary['fileName'])
 					push = self.pushBulletManager.push_file(**fileData)
-					logging.info("push result: ", push)
+					print("push result: ", push)
 					if "iden" in push:
 						os.remove(filePath)
 			else:
-				logging.info("Not support type: ", dataDictionary['Type'])		
+				print("Not support type: ", dataDictionary['Type'])		
 			self.notificationQueue.task_done()
 
 	def __delete(self):
@@ -71,13 +72,13 @@ class NotificationHandler:
 			latest = allPushes[0]
 			if 'body' in latest:
 				body = latest['body']
-				logging.info(body)
+				print(body)
 				if body.startswith("@"):
 					self.didReceiveCommand(body)
-				else:
-					logging.info("latest pushes: ", latest)	
-			else:
-				logging.info("latest pushes: ", latest)	
+		#		else:
+		#			print("latest pushes: ", latest)	
+		#	else:
+		#		print("latest pushes: ", latest)	
 
 	def notifyWithImage(self,filePath):
 		with open(filePath, "rb") as pic:
