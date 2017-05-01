@@ -48,9 +48,19 @@ class NotificationHandler:
 			dataDictionary=self.notificationQueue.get()
 			print("upload and notify: ", dataDictionary)
 			if dataDictionary['type'] == "TEXT_MESSAGE":
-				push = self.pushBulletManager.push_note("Push from Picam",dataDictionary['text'] )
+				push = self.pushBulletManager.push_note(dataDictionary['text'],'' )
 				print("push result: ", push)
-			elif dataDictionary['type'] == "FILE_MESSAGE":
+			elif dataDictionary['type'] == "IMAGE_MESSAGE":
+				filePath = dataDictionary['filePath']
+				print("upload and push file: ", filePath)
+				with open(filePath, "rb") as pic:
+					fileData = self.pushBulletManager.upload_file(pic, dataDictionary['fileName'])
+					push = self.pushBulletManager.push_file(**fileData)
+					print("push result: ", push)
+					if "iden" in push:
+						os.remove(filePath)
+			elif dataDictionary['type'] == "VIDEO_MESSAGE":
+				push = self.pushBulletManager.push_note("The motion is out. Video uploading...",'')
 				filePath = dataDictionary['filePath']
 				print("upload and push file: ", filePath)
 				with open(filePath, "rb") as pic:
