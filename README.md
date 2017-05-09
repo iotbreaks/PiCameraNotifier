@@ -2,7 +2,7 @@
 This is a camera application which detects motion and notifies to mobiles and desktops with captured images and videos when motion detected. It's mostly written in Python.
 
 ## Detail Explanation and Demo Video 
-Please goto this [tutorial](http://iotbreaks.com) :+1:
+Please goto this [tutorial](https://www.iotbreaks.com/how-to-build-an-application-to-detect-motion-and-notify-with-raspberry-pi-and-camera-module/) :+1:
 
 ## Hardware
 * Raspberry Pi 3
