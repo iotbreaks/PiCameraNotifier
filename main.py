@@ -22,6 +22,8 @@ PUSHBULLET_KEY = 'o.S8ZGW1bHDLDCOc7M4TvbODjcEg8tfoIf' # picamera.demo (ratelimit
 CAMERA_OUT_PATH = '/home/pi/Desktop/'
 WORKING_DIR="/home/pi/Desktop/PiCameraNotifier/"
 LOG_FILE_PATH=WORKING_DIR+'run.log'
+VIDEO_RECORDING_PORT=1
+MOTION_ANALYSIS_PORT=2
 logging.basicConfig(format='%(asctime)s %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p',filename=LOG_FILE_PATH,level=logging.INFO)
 logging.info("=========== app launched ========")
 
@@ -55,15 +57,18 @@ class DetectMotion(picamera.array.PiMotionAnalysis):
 		if(a > 60).sum() > 10:
 			logging.info("motion just detected")
 			isMotionDetected = True
-			didDetectMotion() 
 		else: 
 			isMotionDetected = False
 
 def didDetectMotion():
 	global notificationHandler
+	global isMotionDetected
+	global camera
+	camera.split_recording("after.h264", splitter_port=VIDEO_RECORDING_PORT)
 	pushData = {'type': 'TEXT_MESSAGE', 'text': 'Hey! someone sneak into your room. Check it ou!'}
 	notificationHandler.pushToMobile(pushData)
 	fileName=time.strftime("%Y%m%d_%I:%M:%S%p")  # '20170424_12:53:15AM'
+	logging.info("push image...")
 	captureImage(fileName)
 	scheduler.enter(1,1, writeVideo, (fileName,))
 	scheduler.run()
@@ -84,7 +89,10 @@ def writeVideo(fileName):
 	global notificationHandler
 	logging.info('Writing video with fileName: ', fileName)
 	with stream.lock:
+		frameIdx=0
 		for frame in stream.frames:
+			print('frameIdx: ', frameIdx)
+			frameIdx = frameIdx + 1
 			if frame.frame_type == picamera.PiVideoFrameType.sps_header:
 				stream.seek(frame.position)
 				break
@@ -102,30 +110,33 @@ def cameraInitialize():
 	logging.info("cameraInitialize: for (1) motion detection, and (2) circularIO recording")
 	global camera
 	# for motion detection 
-	motionAnalysisPort=2
 	camera.start_recording(
 				'/dev/null', 
-				splitter_port=motionAnalysisPort,
+				splitter_port=MOTION_ANALYSIS_PORT,
 				resize=(640,480),
 				format='h264',
 				motion_output=DetectMotion(camera, size=(640,480))
 				)
 	# for circularIO recording
-	HDVideoRecordPort=1
 	global stream
 	camera.start_recording(
 				stream,
 				format="h264", 
 				resize=(640,480),
-				splitter_port=HDVideoRecordPort)
+				splitter_port=VIDEO_RECORDING_PORT)
 	
 def main():
+	logging.info("Start main")
 	global isMotionDetected
 	global notificationHandler
 	logging.info("### Initialize Camera")
 	cameraInitialize()
 	pushData = {'type': 'TEXT_MESSAGE', 'text': 'PiCameraNotifier app starts !'}
 	notificationHandler.pushToMobile(pushData)
+	while True:
+		if(isMotionDetected):
+			didDetectMotion()
+		time.sleep(0.2)			
 
 if __name__ == "__main__":
     main()
