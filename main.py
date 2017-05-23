@@ -27,10 +27,9 @@ MOTION_ANALYSIS_PORT=2
 logging.basicConfig(format='%(asctime)s %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p',filename=LOG_FILE_PATH,level=logging.INFO)
 logging.info("=========== app launched ========")
 
-isMotionDetected = False
 camera = picamera.PiCamera()
 camera.annotate_background = True
-stream = picamera.PiCameraCircularIO(camera, seconds=2)
+stream = picamera.PiCameraCircularIO(camera, seconds=10, bitrate=857600) # estimated base on H.264 encoded data per frame
 scheduler = sched.scheduler(time.time, time.sleep)
 
 def didReceiveCommand(command):
@@ -52,26 +51,22 @@ notificationHandler = NotificationHandler(PUSHBULLET_KEY,didReceiveCommand)
 
 class DetectMotion(picamera.array.PiMotionAnalysis):
 	def analyse(self,a):
-		global isMotionDetected
 		a = np.sqrt(np.square(a['x'].astype(np.float)) + np.square(a['y'].astype(np.float))).clip(0, 255).astype(np.uint8)
 		if(a > 60).sum() > 10:
 			logging.info("motion just detected")
-			isMotionDetected = True
-		else: 
-			isMotionDetected = False
+			print("motion just detected")
+			didDetectMotion()	
 
 def didDetectMotion():
-	global notificationHandler
-	global isMotionDetected
-	global camera
-	camera.split_recording("after.h264", splitter_port=VIDEO_RECORDING_PORT)
-	pushData = {'type': 'TEXT_MESSAGE', 'text': 'Hey! someone sneak into your room. Check it ou!'}
-	notificationHandler.pushToMobile(pushData)
-	fileName=time.strftime("%Y%m%d_%I:%M:%S%p")  # '20170424_12:53:15AM'
-	logging.info("push image...")
-	captureImage(fileName)
-	scheduler.enter(1,1, writeVideo, (fileName,))
-	scheduler.run()
+		global notificationHandler
+		global camera
+		pushData = {'type': 'TEXT_MESSAGE', 'text': 'Hey! someone sneak into your room. Check it ou!'}
+		notificationHandler.pushToMobile(pushData)
+		fileName=time.strftime("%Y%m%d_%I:%M:%S%p")  # '20170424_12:53:15AM'
+		logging.info("push image...")
+		captureImage(fileName)
+		camera.wait_recording(7)
+		writeVideo(fileName)
 
 def captureImage(fileName):
 	global camera
@@ -88,23 +83,16 @@ def writeVideo(fileName):
 	global stream
 	global notificationHandler
 	logging.info('Writing video with fileName: ', fileName)
+	filePath=CAMERA_OUT_PATH+fileName+'.h264'
 	with stream.lock:
-		frameIdx=0
-		for frame in stream.frames:
-			print('frameIdx: ', frameIdx)
-			frameIdx = frameIdx + 1
-			if frame.frame_type == picamera.PiVideoFrameType.sps_header:
-				stream.seek(frame.position)
-				break
-		filePath=CAMERA_OUT_PATH+fileName+'.h264'
-		with io.open(filePath, 'wb') as output:
-			output.write(stream.read())
+		stream.copy_to(filePath)
 	# convert from h264 to mp4
 	outputFilePath=CAMERA_OUT_PATH+fileName+'.mp4'
 	logging.info("convert from h264 to mp4...")
 	subprocess.check_call(["ffmpeg", '-framerate', '24', '-i', filePath, '-c', 'copy', outputFilePath])
 	pushData = {'type': 'VIDEO_MESSAGE', 'filePath': outputFilePath, 'fileName': fileName+'.mp4'}
 	notificationHandler.pushToMobile(pushData)
+
 
 def cameraInitialize():
 	logging.info("cameraInitialize: for (1) motion detection, and (2) circularIO recording")
@@ -127,16 +115,12 @@ def cameraInitialize():
 	
 def main():
 	logging.info("Start main")
-	global isMotionDetected
 	global notificationHandler
 	logging.info("### Initialize Camera")
 	cameraInitialize()
 	pushData = {'type': 'TEXT_MESSAGE', 'text': 'PiCameraNotifier app starts !'}
 	notificationHandler.pushToMobile(pushData)
-	while True:
-		if(isMotionDetected):
-			didDetectMotion()
-		time.sleep(0.2)			
+			
 
 if __name__ == "__main__":
     main()
