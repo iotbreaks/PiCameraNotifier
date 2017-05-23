@@ -29,7 +29,7 @@ logging.info("=========== app launched ========")
 
 camera = picamera.PiCamera()
 camera.annotate_background = True
-stream = picamera.PiCameraCircularIO(camera, seconds=10, bitrate=857600) # estimated base on H.264 encoded data per frame
+stream = picamera.PiCameraCircularIO(camera, seconds=10, bitrate=1300000) # estimated base on H.264 encoded data per frame
 scheduler = sched.scheduler(time.time, time.sleep)
 
 def didReceiveCommand(command):
@@ -57,16 +57,24 @@ class DetectMotion(picamera.array.PiMotionAnalysis):
 			print("motion just detected")
 			didDetectMotion()	
 
+isRecordingMotion = False
 def didDetectMotion():
-		global notificationHandler
-		global camera
-		pushData = {'type': 'TEXT_MESSAGE', 'text': 'Hey! someone sneak into your room. Check it ou!'}
-		notificationHandler.pushToMobile(pushData)
-		fileName=time.strftime("%Y%m%d_%I:%M:%S%p")  # '20170424_12:53:15AM'
-		logging.info("push image...")
-		captureImage(fileName)
-		camera.wait_recording(7)
-		writeVideo(fileName)
+		global isRecordingMotion
+		if isRecordingMotion:
+			print("is Recording Motion ...")
+		else: 
+			isRecordingMotion = True
+			print("start Recording Motion ...")
+			global notificationHandler
+			global camera
+			pushData = {'type': 'TEXT_MESSAGE', 'text': 'Hey! someone sneak into your room. Check it out!'}
+			notificationHandler.pushToMobile(pushData)
+			fileName=time.strftime("%Y%m%d_%I:%M:%S%p")  # '20170424_12:53:15AM'
+			logging.info("push image...")
+			captureImage(fileName)
+			camera.wait_recording(7)
+			writeVideo(fileName)
+			isRecordingMotion = False
 
 def captureImage(fileName):
 	global camera
