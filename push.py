@@ -40,7 +40,7 @@ class NotificationHandler:
 	
 	def pushToMobile(self, dataDictionary):
 		print("pushToMobile: ", dataDictionary)
-		#self.notificationQueue.put(dataDictionary)
+		self.notificationQueue.put(dataDictionary)
 	
 	def __motionNotify(self):
 		print("__motionNotify called")
